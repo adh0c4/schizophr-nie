@@ -1,0 +1,19 @@
+gamestate explication:
+
+Règles et MaJ:
+
+- gestion des timers -> timer global + timers spécifiques de cuisson et de préparation
+
+- calcul des scores / conditions victoire-défaite / indicateur de satisfaction
+
+- Durabilité et pannes
+
+- interactions et transitions
+
+- Passe = transaction coté serveur. permet la transition des plats entre les deux clients
+
+- Recette et ordre aléatoire: ordre des étapes tiré au sort au démarrage. Le serveur mémorise l'ordre
+
+- historique : mémorisation de l'ordre de toutes les actions réalisées par les 2 joueurs
+
+- dressage final : score de placement sur la grille 5x5 calculé en mesurant la distance entre la pos réelle et la pos cible pour chaque élément.

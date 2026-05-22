@@ -1,0 +1,61 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+autonumber
+
+title Studio_X_Sequence_ActionJoueur (Transaction de la Passe)
+
+actor "Chef Froid\n(Client 1)" as CF
+participant "Serveur\n(Réseau)" as S
+participant "GameState\n(Logique Métier)" as GS
+actor "Chef Chaud\n(Client 2)" as CC
+
+== 1. Entrée Utilisateur ==
+CF -> CF : Clic sur bouton "Envoyer Passe"
+CF -> S : envoyer_action_serveur({"action": "envoyer_passe", "ing": "emulsion"})
+activate S
+
+== 2. Traitement et Validation Côté Serveur ==
+S -> GS : traiter_action("froid", "envoyer_passe", "emulsion")
+activate GS
+
+GS -> GS : valider_passage("emulsion")
+note right of GS
+  Le GameState vérifie :
+  1. L'ingrédient est "prêt".
+  2. C'est la bonne étape de Recette.
+end note
+
+alt Validation Réussie
+    GS -> GS : retirer_ingredient(PosteFroid)
+    GS -> GS : ajouter_ingredient(PosteChaud)
+else Validation Échouée
+    GS -> GS : appliquer_penalite_temps(30s)
+end
+
+GS --> S : action_traitee
+deactivate GS
+
+== 3. Génération des Snapshots Asymétriques ==
+S -> GS : serialiser_pour_client("froid")
+activate GS
+GS --> S : snapshot_froid
+deactivate GS
+
+S -> GS : serialiser_pour_client("chaud")
+activate GS
+GS --> S : snapshot_chaud
+deactivate GS
+
+== 4. Retour Visuel (KDS) ==
+S -> CF : envoyer_paquet_reseau(snapshot_froid)
+S -> CC : envoyer_paquet_reseau(snapshot_chaud)
+deactivate S
+
+CF -> CF : mettre_a_jour_kds()
+note left of CF : L'ingrédient disparaît\nde son interface.
+
+CC -> CC : mettre_a_jour_kds()
+note right of CC : L'ingrédient apparaît\n(ou animation fumée si échec).
+
+@enduml
