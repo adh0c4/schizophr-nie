@@ -1,0 +1,124 @@
+@startuml
+
+/'-----------CLASSES DE BASE------------'/
+class Ingredient{
+ #nom : str
+ #pH : int
+ #temperature : int
+ #etat : str
+ #perisable : bool
+ #timer_degradation : int
+
+ +preparer()
+ +preparer() 
+ +degrade() : bool 
+ +est_pret() : bool
+}
+
+class Ustensile {
+ #nom : str
+ #etat : str
+ #timer_cycle
+ #temps_cycle_total
+
+ +demarrer_cycle()
+ +arreter_cycle()
+ +tomber_en_panne()
+ +reparer(sequence)
+}
+
+class Recette {
+ #etapes : list
+ #etape_courante : int
+ #ordre_aleatoire : int
+ #score_qualite : int
+
+ +etape_suivante()
+ +valider_passage()
+ +calculer_score()
+}
+
+class Commande {
+ #numero_table : int
+ #heure_arrivee : int
+ #plat_attendu : str
+ #statut : str
+ #timer_service : int
+
+ +accepter()
+ +refuser()
+ +calculer_retard()
+}
+
+class Poste {
+ #nom : str
+ #ustensiles : list
+ #ingredients_disponibles : list
+ #joueur_assigne
+
+ +joueur_assigne(ing)
+ +envoyer_passe(ing)
+ +get_ustensile(nom)
+}
+
+
+class ClientResto {
+ #numero_table : int
+ #type_de_client : str
+
+ +passe_commande()
+}
+note top of ClientResto : "Dans le contexte du restaurant"
+
+class ClientJoueur{
+ #poste : str
+ 
+}
+note right of ClientJoueur : "Dans le contexte du jeu en lui-même"
+
+class ChefChaud{
+
+}
+
+class ChefFroid{
+}
+
+class Serveur{
+ gestion_temps()
+ calcule_score()
+}
+
+interface Passe {
+ +Poste.envoyer_passe()
+}
+
+interface Dressage {
+ +dresse_ingredient()
+ 
+}
+
+
+
+/'----------------------------------'/
+
+
+/'-------------LINKS-------------'/
+
+Ingredient"0..*" o-- "1..*"Recette : < est constitué de
+Commande"1..*" --o "1..*"Recette
+Ustensile"0..*" -- "1..*"Recette : Utilisé pour >
+ClientResto"1..*" -- "1"Commande : passe >
+Passe <|.. Commande
+Passe <|.. Poste
+Poste"1" -- "1..*"Recette
+Dressage <|.. Poste
+Dressage <|.. Ingredient
+Poste"1" <|-- "1"ChefChaud
+Poste"1" <|-- "1"ChefFroid
+ChefChaud"1" <|-- "1"ClientJoueur
+ChefFroid"1" <|-- "1"ClientJoueur
+
+/'-------------------------------'/
+
+
+@enduml

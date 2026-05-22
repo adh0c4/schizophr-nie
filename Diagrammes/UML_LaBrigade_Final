@@ -1,0 +1,170 @@
+@startuml
+
+title Diagramme de Classes Complet - La Brigade (Architecture Client/Serveur)
+
+' --- ENUMERATIONS ---
+
+enum EtatIngredient {
+  BRUT
+  PREPARE
+  DEGRADE
+  GACHE
+}
+
+enum EtatUstensile {
+  LIBRE
+  OCCUPE
+  EN_CYCLE
+  EN_PANNE
+}
+
+enum StatutCommande {
+  EN_ATTENTE
+  EN_COURS
+  SERVIE
+  REFUSEE
+}
+
+' --- COTE SERVEUR ---
+
+class GameState {
+      # timer_global : int
+      # satisfaction : float
+      # qualite_recette_globale : int
+      # liste_postes : List<Poste>
+      # recettes : List<Recette>
+      # commandes_actives : List<Commande>
+      + serialiser_pour_client(role : String) : Dict
+      + mettre_a_jour_timers() : void
+    }
+class Serveur {
+      # timer_global : int
+      # satisfaction : float
+      # qualite_recette_globale : int
+      + tick_serveur() : void
+      + gerer_transaction_passe(ing : Ingredient, origine : Poste) : void
+      + generer_snapshot(role : String) : Dict
+      + diffuser_gamestate() : void
+      + traiter_action_client(joueur : String, action : String) : void
+}
+
+class Client {
+      # id_joueur : String
+      # role_assigne : String
+      # dernier_snapshot : Dict
+      + envoyer_action_serveur(action : String) : void
+      + recevoir_snapshot(data : Dict) : void
+      + mettre_a_jour_kds() : void
+    }
+class ClientResto{
+    #numero_table : int
+    #type_de_client : str
+    +passe_commande() : void
+}
+    
+class Poste {
+  # nom : String
+  # ustensiles : liste
+  # ingredients_disponibles : liste
+  # joueur_assigne : String
+  + recevoir_ingredient(ing : Ingredient) : void
+  + envoyer_passe(ing : Ingredient) : void
+  + get_ustensile(nom : String) : Ustensile
+}
+
+class Ingredient {
+  # nom : String
+  # pH : float
+  # temperature : float
+  # etat : EtatIngredient
+  # perishable : bool
+  # timer_degradation : int
+  + preparer() : void
+  + degrade() : bool
+  + est_pret() : bool
+}
+
+class Ustensile {
+  # nom : String
+  # etat : EtatUstensile
+  # timer_cycle : int
+  # temps_cycle_total : int
+  + demarrer_cycle() : void
+  + arreter_cycle() : void
+  + tomber_en_panne() : void
+  + reparer(sequence : String) : void
+}
+
+class Recette {
+  # etapes : List<String>
+  # etape_courante : int
+  # ordre_aleatoire : int
+  # score_qualite : int
+  + etape_suivante() : void
+  + valider_passage(ingredient : Ingredient) : void
+  + calculer_score() : void
+}
+
+class Commande {
+  # numero_table : int
+  # heure_arrivee : DateTime
+  # plat_attendu : String
+  # statut : StatutCommande
+  # timer_service : int
+  + accepter() : void
+  + refuser() : void
+  + calculer_retard() : void
+}
+
+class ChefChaud {
+      # jauge_temperature_plaque : float
+      # grille_dressage : int[5][5]
+      + ajuster_thermostat() : void
+      + placer_element_assiette(element : String, x : int, y : int) : void
+      + valider_envoi_salle() : void
+      + mettre_a_jour_kds() : void
+    }
+
+class ChefFroid {
+      # ordre_etapes_visible : List<String>
+      + actionner_centrifugeuse() : void
+      + declencher_envoi_passe(ing : Ingredient) : void
+      + dicter_motif_dressage() : void
+      + mettre_a_jour_kds() : void
+    }
+
+
+' --- RELATIONS ET DEPENDANCES ---
+
+' Flux Réseau 
+Client "2" .right.> "1" Serveur : envoie inputs >
+Serveur "1" .left.> "2" Client : diffuse snapshots >
+
+' Le serveur possède et pilote le GameState
+Serveur *-- "1" GameState : possède et modifie >
+
+' Le GameState englobe toute la structure de données du jeu (Compositions fortes)
+GameState *-- "2" Poste : contient >
+GameState *-- "1..*" Recette : traque >
+GameState *-- "0..*" Commande : liste >
+
+' Contenu physique des postes (Agrégations interchangeables)
+Poste o-- "0..*" Ustensile : met à disposition >
+Poste o-- "0..*" Ingredient : contient >
+
+' Le gamestate possède et modifie les Etats/status
+GameState ..> EtatIngredient : modifie >
+GameState ..> EtatUstensile : modifie >
+GameState ..> StatutCommande : modifie >
+' Dépendances métiers
+Recette ..> Ingredient : utilise pour validation >
+ClientResto "0.*" -- "1" Commande : effectue
+
+'les chefs et leurs relations
+ChefChaud "1" -- "1." Commande : livre >
+ChefFroid -- Ingredient : modifie >
+ChefChaud -- Ingredient : agence >
+Poste -- ChefChaud
+Poste -- ChefFroid
+
+@enduml

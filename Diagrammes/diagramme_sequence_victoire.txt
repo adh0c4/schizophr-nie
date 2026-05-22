@@ -1,0 +1,62 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+autonumber
+
+title Studio_X_Sequence_Victoire (Dernière Commande Servie)
+
+actor "Chef Chaud\n(Client 2)" as CC
+participant "Serveur\n(Réseau)" as S
+participant "GameState\n(Logique Métier)" as GS
+actor "Chef Froid\n(Client 1)" as CF
+
+== 1. Action Finale du Joueur ==
+CC -> CC : Clic sur "Valider Envoi Salle"
+CC -> S : envoyer_action_serveur({"action": "valider_dressage", "grille": [...]})
+activate S
+
+== 2. Calcul du Score et Conditions de Fin ==
+S -> GS : traiter_action("chaud", "valider_dressage")
+activate GS
+
+GS -> GS : verifier_et_noter_dressage()
+GS -> GS : maj_statut_commande("SERVIE")
+
+GS -> GS : verifier_conditions_victoire()
+note right of GS
+  Le GameState vérifie :
+  - Toutes les commandes sont servies.
+  - Indicateur satisfaction > 20%.
+end note
+
+GS -> GS : partie_terminee = True
+GS -> GS : victoire = True
+
+GS --> S : action_traitee
+deactivate GS
+
+== 3. Diffusion de l'État de Fin ==
+S -> GS : serialiser_pour_client("chaud")
+activate GS
+GS --> S : snapshot_chaud (contient { "etat_partie": "VICTOIRE" })
+deactivate GS
+
+S -> GS : serialiser_pour_client("froid")
+activate GS
+GS --> S : snapshot_froid (contient { "etat_partie": "VICTOIRE" })
+deactivate GS
+
+S -> CC : envoyer_paquet_reseau(snapshot_chaud)
+S -> CF : envoyer_paquet_reseau(snapshot_froid)
+deactivate S
+
+== 4. Écran de Fin chez les Clients ==
+CC -> CC : verifier_etat_partie()
+CC -> CC : afficher_ecran_victoire()
+note right of CC : Affichage du score final\net blocage des inputs.
+
+CF -> CF : verifier_etat_partie()
+CF -> CF : afficher_ecran_victoire()
+note left of CF : Affichage du score final\net blocage des inputs.
+
+@enduml
