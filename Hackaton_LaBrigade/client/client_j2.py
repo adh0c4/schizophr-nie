@@ -131,10 +131,19 @@ def run_game(net: Network):
     clock, font, font_s = pygame.time.Clock(), pygame.font.SysFont("Arial", 22, bold=True), pygame.font.SysFont("Arial", 14, bold=True)
     police = pygame.font.SysFont("Arial", 40, bold=True)
 
+    #----------------MENU---------------------------#
+    text_menu = police.render("Joueur 2, Chef Chaud", True, RED) 
+    bouton_start = Bouton("Hackaton_LaBrigade/client/ressources/images/start_button.png", 400, 200, 200, 100)
+    bouton_exit = Bouton("Hackaton_LaBrigade/client/ressources/images/exit_button.png", 400, 400, 200, 100)
+    background_menu = pygame.image.load("Hackaton_LaBrigade/client/ressources/images/bg_image.png").convert()
+    bg_menu = pygame.transform.scale(background_menu, (WIDTH, HEIGHT))
+    menu = "on"
+    #-----------------------------------------------#
+
     try: map_j2 = pygame.transform.scale(pygame.image.load(os.path.join(os.path.dirname(__file__), "Carte_J2.png")).convert(), (WIDTH, HEIGHT))
     except: map_j2 = pygame.Surface((WIDTH, HEIGHT))
 
-    game = "on"
+    game = "off"
     # Initialisation dans run_game
     img_joueur = os.path.join(os.path.dirname(__file__), "ressources", "images", "cat_2.png")
     chef = PlayerJ2(WIDTH//2, 460, img_joueur, ligne_down=2, ligne_up=3, ligne_left=4, ligne_right=5, ligne_idle=13, scale=2.2)
@@ -174,7 +183,26 @@ def run_game(net: Network):
         elif chef.get_rect().colliderect(station_poubelle.inflate(40,40)): station_cible = "POUBELLE"
 
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: running = False
+            if event.type == pygame.QUIT: 
+                running = False
+
+            elif menu == "on" or game == "off":
+            #----------- Affichage MENU -----------#
+                screen.fill((255, 255, 255))
+                screen.blit(bg_menu, (0, 0))
+                screen.blit(text_menu, (270, 50))
+                bouton_start.draw(screen)
+                bouton_exit.draw(screen)
+            #--------------------------------------#
+                
+                #------------------Activation menu--------------------#        
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if bouton_start.rect.collidepoint(event.pos):
+                        game = "on"
+                    elif bouton_exit.rect.collidepoint(event.pos):
+                        print("Exit button clicked")
+                        running = False
+                #-----------------------------------------------------#
 
             if popup_dressage_ouvert:
                 if event.type == pygame.MOUSEBUTTONDOWN:
