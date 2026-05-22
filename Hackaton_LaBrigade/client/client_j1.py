@@ -76,11 +76,21 @@ def draw_qte_arrow(screen, color, pos, direction):
     pygame.draw.polygon(screen, color, points)
 
 
+def get_game_result(state):
+    etat = str(state.get("etat", "")).lower()
+    if state.get("game_won") or etat == "victoire":
+        return "victoire"
+    if state.get("game_lost") or etat == "defaite":
+        return "defaite"
+    return None
+
+
 def run_game(net: Network):
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption(TITRE_FENETRE)
     clock, font, font_s = pygame.time.Clock(), pygame.font.SysFont("Arial", 22, bold=True), pygame.font.SysFont("Arial", 14, bold=True)
+    police_victoir = pygame.font.SysFont("Arial", 100)
     police = pygame.font.SysFont("Arial", 40, bold=True)
     
     #----------------MENU---------------------------#
@@ -100,6 +110,15 @@ def run_game(net: Network):
     # Initialisation dans run_game
     img_joueur = os.path.join(os.path.dirname(__file__), "ressources", "images", "cat_3.png")
     chef = PlayerJ1(WIDTH//2, 300, img_joueur, ligne_down=2, ligne_up=3, ligne_left=4, ligne_right=5, ligne_idle=13, scale=2.2)
+
+    try:
+        bg_victoire = pygame.transform.scale(pygame.image.load(os.path.join(os.path.dirname(__file__), "ressources", "images", "victoire.png")).convert(), (WIDTH, HEIGHT))
+    except Exception:
+        bg_victoire = None
+    try:
+        bg_defaite = pygame.transform.scale(pygame.image.load(os.path.join(os.path.dirname(__file__), "ressources", "images", "defete.png")).convert(), (WIDTH, HEIGHT))
+    except Exception:
+        bg_defaite = None
     
     station_passe, station_reserve = pygame.Rect(390, 25, 180, 70), pygame.Rect(390, 370, 180, 80)
     station_centrifugeuse, station_reparation = pygame.Rect(90, 144, 115, 150), pygame.Rect(755, 144, 115, 150)
@@ -139,8 +158,7 @@ def run_game(net: Network):
                         print("Exit button clicked")
                         running = False
                 #-----------------------------------------------------#
-
-
+            
             if event.type == pygame.KEYDOWN and game == "on":
                 if event.key == pygame.K_p: action = {"action": "DECLENCHER_PANNE_DEBUG_FROID"}
                 elif station_cible == "REPARATION" and state.get("ustensiles", {}).get("plaque_chauffante", {}).get("etat") == "en_panne":
@@ -163,7 +181,7 @@ def run_game(net: Network):
         if game == "on": chef.update(pygame.key.get_pressed(), obstacles)
         new_state = net.send(action)
         if new_state: state = new_state
-        if state.get("game_won") or state.get("game_lost"):
+        if get_game_result(state):
             game = "over"
 
         if game == "on":
@@ -253,10 +271,16 @@ def run_game(net: Network):
                     draw_qte_arrow(screen, couleur, (WIDTH//2 - 100 + i*50, HEIGHT//2 - 70), d)
 
         elif game == "over":
-            screen.blit(map_j1, (0, 0))
-            resultat = "VICTOIRE !" if state.get("game_won") else "DÉFAITE"
+            if get_game_result(state) == "victoire" and bg_victoire:
+                screen.blit(bg_victoire, (0, 0))
+            elif get_game_result(state) == "defaite" and bg_defaite:
+                screen.blit(bg_defaite, (0, 0))
+            else:
+                screen.blit(map_j1, (0, 0))
+            is_victoire = get_game_result(state) == "victoire"
+            resultat = "VICTOIRE !" if is_victoire else "DÉFAITE"
             message = (
-                "La satisfaction a été maintenue suffisamment longtemps." if state.get("game_won")
+                "La satisfaction a été maintenue suffisamment longtemps." if is_victoire
                 else "La satisfaction est tombée trop bas."
             )
             pygame.draw.rect(screen, BLACK, (WIDTH//2 - 280, HEIGHT//2 - 100, 560, 160), border_radius=20)

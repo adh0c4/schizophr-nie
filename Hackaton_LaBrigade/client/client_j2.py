@@ -123,12 +123,22 @@ def draw_qte_arrow(screen, color, pos, direction):
     elif direction == "LEFT": points = [(x-15, y), (x+5, y-10), (x+5, y+10)]
     elif direction == "RIGHT": points = [(x+15, y), (x-5, y-10), (x-5, y+10)]
     pygame.draw.polygon(screen, color, points)
+
+
+def get_game_result(state):
+    etat = str(state.get("etat", "")).lower()
+    if state.get("game_won") or etat == "victoire":
+        return "victoire"
+    if state.get("game_lost") or etat == "defaite":
+        return "defaite"
+    return None
             
 def run_game(net: Network):
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption(TITRE_FENETRE)
     clock, font, font_s = pygame.time.Clock(), pygame.font.SysFont("Arial", 22, bold=True), pygame.font.SysFont("Arial", 14, bold=True)
+    police_victoir = pygame.font.SysFont("Arial", 100)
     police = pygame.font.SysFont("Arial", 40, bold=True)
 
     #----------------MENU---------------------------#
@@ -138,6 +148,18 @@ def run_game(net: Network):
     background_menu = pygame.image.load("Hackaton_LaBrigade/client/ressources/images/bg_image.png").convert()
     bg_menu = pygame.transform.scale(background_menu, (WIDTH, HEIGHT))
     menu = "on"
+
+    #Victoire
+    background_vic = pygame.image.load("Hackaton_LaBrigade/client/ressources/images/victoire.png").convert()
+    bg_vic = pygame.transform.scale(background_vic, (800, 600))
+    text_vic = police_victoir.render("VICTOIR", True, (10, 196, 190))
+    text_merci = police.render("Merci d'avoir joué", True, (10, 196, 190))
+
+    #Defaite
+    text_def = police_victoir.render("DEFAITE", True, (209, 10, 40))
+    text_merci_def = police.render("Merci d'avoir joué... malgré tout", True, (209, 10, 40))
+    background_def = pygame.image.load("Hackaton_LaBrigade/client/ressources/images/defete.png").convert()
+    bg_def = pygame.transform.scale(background_def, (800, 600))
     #-----------------------------------------------#
 
     try: map_j2 = pygame.transform.scale(pygame.image.load(os.path.join(os.path.dirname(__file__), "Carte_J2.png")).convert(), (WIDTH, HEIGHT))
@@ -147,6 +169,15 @@ def run_game(net: Network):
     # Initialisation dans run_game
     img_joueur = os.path.join(os.path.dirname(__file__), "ressources", "images", "cat_2.png")
     chef = PlayerJ2(WIDTH//2, 460, img_joueur, ligne_down=2, ligne_up=3, ligne_left=4, ligne_right=5, ligne_idle=13, scale=2.2)
+
+    try:
+        bg_victoire = pygame.transform.scale(pygame.image.load(os.path.join(os.path.dirname(__file__), "ressources", "images", "victoire.png")).convert(), (WIDTH, HEIGHT))
+    except Exception:
+        bg_victoire = None
+    try:
+        bg_defaite = pygame.transform.scale(pygame.image.load(os.path.join(os.path.dirname(__file__), "ressources", "images", "defete.png")).convert(), (WIDTH, HEIGHT))
+    except Exception:
+        bg_defaite = None
 
     # Initialisation des clients
     dossier = os.path.dirname(os.path.abspath(__file__))
@@ -233,6 +264,8 @@ def run_game(net: Network):
             
         new_state = net.send(action)
         if new_state: state = new_state
+        if get_game_result(state):
+            game = "over"
 
         if game == "on":
             screen.blit(map_j2, (0, 0))
@@ -339,6 +372,29 @@ def run_game(net: Network):
                 
                 txt2 = font_s.render("Échap/Espace pour fermer", True, GRAY)
                 screen.blit(txt2, (WIDTH//2 - txt2.get_width()//2, rect_grille_popup.bottom + 20))
+
+        elif game == "over":
+            if get_game_result(state) == "victoire" and bg_victoire:
+                screen.blit(bg_victoire, (0, 0))
+            elif get_game_result(state) == "defaite" and bg_defaite:
+                screen.blit(bg_defaite, (0, 0))
+            else:
+                screen.blit(map_j2, (0, 0))
+
+            is_victoire = get_game_result(state) == "victoire"
+            resultat = "VICTOIRE !" if is_victoire else "DÉFAITE"
+            if resultat == "DÉFAITE": 
+                screen.fill((255, 255, 255))
+                screen.blit(bg_defaite, (0, 0))
+                screen.blit(text_def, (170, 50))
+                screen.blit(text_merci_def, (60, 150))
+                bouton_exit.draw(screen)
+            else :                
+                screen.fill((255, 255, 255))
+                screen.blit(bg_victoire, (0, 0))
+                screen.blit(text_vic, (170, 50))
+                screen.blit(text_merci, (60, 150))
+                bouton_exit.draw(screen)
 
         pygame.display.flip()
         clock.tick(FPS)
