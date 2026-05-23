@@ -15,8 +15,8 @@ police = pygame.font.SysFont("Arial", 80)
 text_vic = police_victoir.render("VICTOIR", True, (10, 196, 190))
 text_merci = police.render("Merci d'avoir joué", True, (10, 196, 190))
 bouton_exit = Bouton("client/ressources/images/exit_button.png", 300, 400, 200, 100)
-background = pygame.image.load("client/ressources/images/victoire.png").convert()
-bg_menu = pygame.transform.scale(background, (800, 600))
+background_vic = pygame.image.load("client/ressources/images/victoire.png").convert()
+bg_vic = pygame.transform.scale(background_vic, (800, 600))
 menu = "on"
 #-----------------------------------------------#
 
@@ -33,7 +33,7 @@ while running:
 
 #----------- Affichage MENU -----------#
     screen.fill((255, 255, 255))
-    screen.blit(bg_menu, (0, 0))
+    screen.blit(bg_vic, (0, 0))
     screen.blit(text_vic, (170, 50))
     screen.blit(text_merci, (60, 150))
     bouton_exit.draw(screen)
