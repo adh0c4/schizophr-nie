@@ -100,6 +100,18 @@ def run_game(net: Network):
     background_menu = pygame.image.load("Hackaton_LaBrigade/client/ressources/images/bg_image.png").convert()
     bg_menu = pygame.transform.scale(background_menu, (WIDTH, HEIGHT))
     menu = "on"
+
+    #Victoire
+    background_vic = pygame.image.load("Hackaton_LaBrigade/client/ressources/images/victoire.png").convert()
+    bg_vic = pygame.transform.scale(background_vic, (800, 600))
+    text_vic = police_victoir.render("VICTOIR", True, (10, 196, 190))
+    text_merci = police.render("Merci d'avoir joué", True, (10, 196, 190))
+
+    #Defaite
+    text_def = police_victoir.render("DEFAITE", True, (209, 10, 40))
+    text_merci_def = police.render("Merci d'avoir joué... malgré tout", True, (209, 10, 40))
+    background_def = pygame.image.load("Hackaton_LaBrigade/client/ressources/images/defete.png").convert()
+    bg_def = pygame.transform.scale(background_def, (800, 600))
     #-----------------------------------------------#
 
 
@@ -276,22 +288,22 @@ def run_game(net: Network):
             elif get_game_result(state) == "defaite" and bg_defaite:
                 screen.blit(bg_defaite, (0, 0))
             else:
-                screen.blit(map_j1, (0, 0))
+                screen.blit(map_j2, (0, 0))
+
             is_victoire = get_game_result(state) == "victoire"
             resultat = "VICTOIRE !" if is_victoire else "DÉFAITE"
-            message = (
-                "La satisfaction a été maintenue suffisamment longtemps." if is_victoire
-                else "La satisfaction est tombée trop bas."
-            )
-            pygame.draw.rect(screen, BLACK, (WIDTH//2 - 280, HEIGHT//2 - 100, 560, 160), border_radius=20)
-            pygame.draw.rect(screen, WHITE, (WIDTH//2 - 282, HEIGHT//2 - 102, 564, 164), 2, border_radius=20)
-            screen.blit(police.render(resultat, True, GREEN if state.get("game_won") else RED), (WIDTH//2 - 140, HEIGHT//2 - 70))
-            screen.blit(font.render(message, True, WHITE), (WIDTH//2 - 250, HEIGHT//2 - 20))
-            screen.blit(font.render("Fermez la fenêtre pour quitter.", True, WHITE), (WIDTH//2 - 210, HEIGHT//2 + 20))
-
-
-
-
+            if resultat == "DÉFAITE": 
+                screen.fill((255, 255, 255))
+                screen.blit(bg_defaite, (0, 0))
+                screen.blit(text_def, (170, 50))
+                screen.blit(text_merci_def, (60, 150))
+                bouton_exit.draw(screen)
+            else :                
+                screen.fill((255, 255, 255))
+                screen.blit(bg_victoire, (0, 0))
+                screen.blit(text_vic, (170, 50))
+                screen.blit(text_merci, (60, 150))
+                bouton_exit.draw(screen)
 
         pygame.display.flip()
         clock.tick(FPS)

@@ -69,7 +69,7 @@ SATISFACTION_VICTOIRE_DURATION_SEC = 6 * 60  # 6 minutes
 
 # Conditions de défaite basées sur la satisfaction
 SATISFACTION_DEFAITE_SEUIL_6MIN = 60.0
-SATISFACTION_DEFAITE_SEUIL_20SEC = 100.0 ########################################################### TEST
+SATISFACTION_DEFAITE_SEUIL_20SEC = 20.0
 SATISFACTION_DEFAITE_20SEC_DURATION_SEC = 20
 
 # Décroissance périodique de la satisfaction
